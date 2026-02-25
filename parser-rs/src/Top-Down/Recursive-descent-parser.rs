@@ -4,6 +4,7 @@ pub enum Token {
     Int(i64),
     String(String),
     Identifier(String),
+    Equal,
     Add,
     Subtract,
     Multiply,
@@ -12,6 +13,7 @@ pub enum Token {
     LeftParen,
     RightParen,
     IfStatement,
+    ElseIfStatement,
     ElseStatement,
     LeftCurlyBracket,
     RightCurlyBracket,
@@ -33,10 +35,18 @@ pub enum Node {
     If {
         condition: Box<Node>,
         then_block: Vec<Node>,
-        else_block: Option<Vec<Node>>,
+        else_block: Option<ElseBlock>,
     },
 
     Program(Vec<Node>),
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+pub enum ElseBlock {
+    If(Box<Node>),
+
+    Block(Vec<Node>),
 }
 
 // Grammar:
@@ -48,6 +58,7 @@ pub enum Node {
 // print_statement ::= "print" "(" expression ")" ";"
 //
 // if_statement ::= "if" "(" expression ")" "{" statement* "}"
+//                      ( "else" "if" "(" expression ")" "{" statement* "}" )*
 //                      ( "else" "{" statement* "}" )?
 //
 // expression_statement ::= expression ";"
@@ -81,5 +92,21 @@ impl Parser {
         token
     }
 
-    pub fn parse(&mut self) {}
+    pub fn parse(&mut self) {
+        self.parse_program();
+    }
+
+    fn parse_program(&mut self) -> Node {
+        let mut statements = Vec::new();
+
+        while self.peek().is_some() {
+            statements.push(self.parse_statement());
+        }
+
+        Node::Program(statements)
+    }
+
+    fn parse_statement(&mut self) -> Node {
+        Node::Print(Box::new(Node::String("Test".to_string())))
+    }
 }
