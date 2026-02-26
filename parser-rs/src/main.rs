@@ -23,7 +23,7 @@ fn main() {
         recursive_descent_parser::Token::IfStatement,
         recursive_descent_parser::Token::LeftParen,
         recursive_descent_parser::Token::Identifier("a".to_string()),
-        recursive_descent_parser::Token::Equal,
+        recursive_descent_parser::Token::EqualEqual,
         recursive_descent_parser::Token::Identifier("b".to_string()),
         recursive_descent_parser::Token::RightParen,
         recursive_descent_parser::Token::LeftCurlyBracket,
