@@ -1,5 +1,5 @@
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Token {
     IntType,
     IntValue(i64),
@@ -114,7 +114,8 @@ impl Parser {
     }
 
     pub fn parse(&mut self) {
-        self.parse_program();
+        let result = self.parse_program();
+        println!("{:?}", result)
     }
 
     fn parse_program(&mut self) -> Node {
@@ -129,55 +130,82 @@ impl Parser {
 
     fn parse_statement(&mut self) -> Node {
         let token = self.consume().unwrap_or(&Token::Illegal);
-        println!("{:?}", token);
 
         let statement = match token {
             Token::IfStatement => self.parse_if_statement(),
-            _ => panic!("Not supposed to happen."),
+            Token::Print => self.parse_print(),
+            t => panic!("PANIC: Not a valid statement: {:?}", t),
         };
-        println!("{:?}", statement);
 
-        Node::Print(Box::new(Node::String("Test".to_string())))
+        statement
     }
 
     fn parse_if_statement(&mut self) -> Node {
-        let left_paren = match self.consume().unwrap() {
+        let _left_paren = match self.consume().unwrap() {
             Token::LeftParen => Token::LeftParen,
             t => panic!("Expected '(', but got {:?}", t),
         };
 
         let expression = self.parse_expression();
 
-        let right_paren = match self.consume().unwrap() {
+        let _right_paren = match self.consume().unwrap() {
             Token::RightParen => Token::RightParen,
             t => panic!("Expected ')', but got {:?}", t),
         };
 
-        let left_curly_bracket = match self.consume().unwrap() {
+        let _left_curly_bracket = match self.consume().unwrap() {
             Token::LeftCurlyBracket => Token::LeftCurlyBracket,
             t => panic!("Expected '{{', but got {:?}", t),
         };
 
-        // parse statements
+        let mut then_block: Vec<Node> = Vec::new();
 
-        let right_curly_bracket = match self.consume().unwrap() {
+        while *self.peek().unwrap() != Token::RightCurlyBracket {
+            then_block.push(self.parse_statement());
+            if self.position > self.tokens.len() {
+                panic!("Never found '}}'")
+            }
+        }
+
+        let _right_curly_bracket = match self.consume().unwrap() {
             Token::RightCurlyBracket => Token::RightCurlyBracket,
             t => panic!("Expected '}}', but got {:?}", t),
         };
 
         Node::If {
-            condition: Box::new(Node::Equal(Box::new(Node::Int(0)), Box::new(Node::Int(0)))),
-            then_block: Vec::new(),
+            condition: Box::new(expression),
+            then_block: then_block,
             else_block: None,
         }
     }
 
-    fn parse_expression(&mut self) {
+    fn parse_print(&mut self) -> Node {
+        let _left_paren = match self.consume().unwrap() {
+            Token::LeftParen => Token::LeftParen,
+            t => panic!("Expected '(', but got {:?}", t),
+        };
+
+        let expression = self.parse_expression();
+
+        let _right_paren = match self.consume().unwrap() {
+            Token::RightParen => Token::RightParen,
+            t => panic!("Expected ')', but got {:?}", t),
+        };
+
+        let _semi_colon = match self.consume().unwrap() {
+            Token::SemiColon => Token::SemiColon,
+            t => panic!("Expected ';', but got {:?}", t),
+        };
+
+        Node::Print(Box::new(expression))
+    }
+
+    fn parse_expression(&mut self) -> Node {
         self.parse_logical()
     }
 
-    fn parse_logical(&mut self) {
-        self.parse_comparison();
+    fn parse_logical(&mut self) -> Node {
+        self.parse_comparison()
     }
 
     fn parse_comparison(&mut self) -> Node {
@@ -186,7 +214,6 @@ impl Parser {
         match self.peek() {
             Some(Token::EqualEqual) => {
                 self.consume();
-                println!("{:?}", Token::EqualEqual);
 
                 let right = self.parse_additive();
                 Node::Equal(Box::new(left), Box::new(right))
@@ -205,7 +232,6 @@ impl Parser {
 
     fn parse_factor(&mut self) -> Node {
         let factor = self.consume().unwrap();
-        println!("{:?}", factor);
 
         match factor {
             Token::String(s) => Node::String(s.clone()),

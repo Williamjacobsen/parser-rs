@@ -31,6 +31,7 @@ fn main() {
         recursive_descent_parser::Token::LeftParen,
         recursive_descent_parser::Token::String("abc".to_string()),
         recursive_descent_parser::Token::RightParen,
+        recursive_descent_parser::Token::SemiColon,
         recursive_descent_parser::Token::RightCurlyBracket,
     ];
 
